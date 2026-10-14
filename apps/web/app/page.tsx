@@ -1,13 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 
+const API = "http://localhost:8001";
+
 export default function Home() {
-  const [s, setS] = useState<any>(null);
+  const [s, setS] = useState<any>("loading…");
   useEffect(() => {
-    fetch("http://api.csap.localhost:8000/vehicles/status".replace(":8000", ":8001"))
+    fetch(`${API}/vehicles/status`)
       .then((r) => r.json())
       .then(setS)
-      .catch(() => setS({ error: "api off? run pnpm --filter @csap/api dev" }));
+      .catch(() => setS({ error: "api off" }));
   }, []);
   return (
     <main style={{ padding: 24, fontFamily: "system-ui", maxWidth: 560 }}>
@@ -16,7 +18,8 @@ export default function Home() {
         {JSON.stringify(s, null, 2)}
       </pre>
       <p>
-        <a href="/spot">Map</a> · <a href="/modes">Modes</a> · <a href="/sos">SOS</a>
+        <a href="/spot">Map</a> · <a href="/modes">Modes</a> · <a href="/sos">SOS</a> ·{" "}
+        <a href="/settings">Settings</a> · <a href="/help">Help</a> · <a href="/pay">Pay</a>
       </p>
       <p style={{ color: "#666" }}>CSAP is not an emergency service.</p>
     </main>

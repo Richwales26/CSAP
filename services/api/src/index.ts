@@ -6,6 +6,9 @@ const port = Number(process.env.API_PORT || 8000);
 const send = (res: http.ServerResponse, code: number, obj: unknown) => {
   res.statusCode = code;
   res.setHeader("content-type", "application/json");
+  res.setHeader("access-control-allow-origin", "*");
+  res.setHeader("access-control-allow-methods", "GET,POST,DELETE,OPTIONS");
+  res.setHeader("access-control-allow-headers", "content-type");
   res.end(JSON.stringify(obj));
 };
 const body = (req: http.IncomingMessage) =>
@@ -25,6 +28,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || "/", "http://x");
   const p = url.pathname;
 
+  if (req.method === "OPTIONS") return send(res, 200, { ok: true });
   if (p === "/health") {
     try {
       await health();
