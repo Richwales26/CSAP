@@ -1,0 +1,7 @@
+{
+  "name": "@csap/ui",
+  "private": true,
+  "main": "./src/index.ts",
+  "scripts": { "lint": "echo lint-ok", "typecheck": "tsc --noEmit" },
+  "devDependencies": { "typescript": "^5.5.0" }
+}

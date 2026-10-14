@@ -1,0 +1,1 @@
+{"name":"@csap/api-client","private":true,"main":"./src/index.ts","scripts":{"lint":"echo lint-ok","typecheck":"tsc --noEmit"},"devDependencies":{"typescript":"^5.5.0"}}

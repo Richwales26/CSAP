@@ -1,0 +1,15 @@
+# CSAP Data (simple)
+
+Tables:
+- users (id, email, name)
+- vehicles (id, owner_id, vin, name, link_type)
+- vehicle_capabilities (vehicle_id, feature, state: supported/unsupported/unverified)
+- trusted_grants (vehicle_id, user_id, can_drive, can_see_spot, ends_at)
+- modes (vehicle_id, mode: everyday/enhanced/theft)
+- locations (vehicle_id, lat, lon, at, fresh: live/last-known)
+- events (vehicle_id, kind, at, fact_or_guess)
+- alerts (vehicle_id, kind, rank, state: sent/failed/unsure)
+- incidents (vehicle_id, kind, state, ack_at)
+- reports (vehicle_id, file_url, kept_until)
+- subscriptions (owner_id, plan: free/premium)
+- audit_log (who, what, at)
