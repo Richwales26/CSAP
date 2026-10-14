@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (future mobile/web)
+node_modules/
+dist/
+build/
+
+# Python (future tooling)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Env / secrets - never commit
+.env
+.env.*
+*.pem
+*.key
