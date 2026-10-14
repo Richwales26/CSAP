@@ -203,6 +203,75 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, { ok: true, note: "thanks — tuning stays careful, new danger still alerts" });
   }
 
+  // Phase 9: account + car remove + help + service health
+  if (p === "/account/delete-info") {
+    return send(res, 200, {
+      deletes: ["profile", "cars", "spots", "helpers", "reports"],
+      keeps: ["audit 1yr (law)", "bills (law)"],
+      effect: "helpers lose entry, car links cut where we can",
+    });
+  }
+  if (p === "/account" && req.method === "DELETE") {
+    const d = await getOrCreateDemo();
+    await pool.query("delete from trusted_grants where vehicle_id=$1", [d.vehicleId]);
+    await pool.query("delete from locations where vehicle_id=$1", [d.vehicleId]);
+    await pool.query("delete from alerts where vehicle_id=$1", [d.vehicleId]);
+    await pool.query("delete from events where vehicle_id=$1", [d.vehicleId]);
+    await pool.query("delete from modes where vehicle_id=$1", [d.vehicleId]);
+    await pool.query("delete from vehicle_capabilities where vehicle_id=$1", [d.vehicleId]);
+    await pool.query("delete from vehicles where id=$1", [d.vehicleId]);
+    return send(res, 200, { ok: true, done: "cars + spots cut", note: "OEM-side cut may need your car app too" });
+  }
+  if (p === "/vehicles/remove" && req.method === "POST") {
+    const d = await getOrCreateDemo();
+    await pool.query("delete from trusted_grants where vehicle_id=$1", [d.vehicleId]);
+    await logEvent(d.vehicleId, "car:removed", "fact");
+    return send(res, 200, { ok: true, removed: d.vehicleId, helpers: "cut", pastSpots: "kept private" });
+  }
+  if (p === "/help") {
+    return send(res, 200, {
+      hours: "Mon-Fri 9-18",
+      firstReply: "48h",
+      warn: "Help is not rescue. For danger call local SOS.",
+      items: ["login help", "pay help", "car link help", "alerts help", "privacy + delete"],
+    });
+  }
+  if (p === "/service/incidents" && req.method === "GET") {
+    return send(res, 200, [{ id: "none", state: "all-ok" }]);
+  }
+  if (p === "/service/incidents" && req.method === "POST") {
+    const b = await body(req);
+    return send(res, 200, { ok: true, id: `inc-${Date.now()}`, what: b.what || "outage", state: "sent-update-soon" });
+  }
+
+  // Phase 10: pay + privacy
+  if (p === "/billing/plans") {
+    return send(res, 200, {
+      free: { cars: 1, historyDays: 7, price: "0" },
+      premium: { cars: 5, historyDays: 30, price: "TBD" },
+      notes: ["no tricks", "safe alerts stay free", "14-day refund check + law rights"],
+    });
+  }
+  if (p === "/billing/check") {
+    const d = await getOrCreateDemo();
+    const c = await pool.query("select count(*)::int n from vehicles where owner_id=$1", [d.userId]);
+    const plan = c.rows[0].n > 1 ? "premium" : "free";
+    return send(res, 200, { cars: c.rows[0].n, plan, ok: true });
+  }
+  if (p === "/privacy/export") {
+    const d = await getOrCreateDemo();
+    const ev = await pool.query("select count(*)::int c from events where vehicle_id=$1", [d.vehicleId]);
+    return send(res, 200, { what: "spots, alerts, events", events: ev.rows[0].c, how: "ask support, 30 days" });
+  }
+
+  // Phase 12: stats (no names, no exact spots)
+  if (p === "/metrics") {
+    const ev = await pool.query("select count(*)::int c from events");
+    const al = await pool.query("select count(*)::int c from alerts");
+    const v = await pool.query("select count(*)::int c from vehicles");
+    return send(res, 200, { cars: v.rows[0].c, events: ev.rows[0].c, alerts: al.rows[0].c, note: "counts only, no private data" });
+  }
+
   return send(res, 404, { error: "unknown" });
 });
 
