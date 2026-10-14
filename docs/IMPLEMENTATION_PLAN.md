@@ -78,20 +78,24 @@ This plan turns the PRD into buildable phases, from design system → architectu
 
 **PRD mapping:** §4, §10 (all), §7.
 
-### 2.1 Recommended stack (to confirm)
+### 2.1 Locked stack (owner decision, Oct 2026 — local-first, scale later)
 
-| Layer | Recommendation | Alternative | Why |
-|---|---|---|---|
-| Monorepo | Turborepo + pnpm + TypeScript | Nx | Shared types, design tokens, API client across mobile/web |
-| Mobile | React Native (Expo) iOS/Android | Flutter | Code-share with web team, OTA for non-native fixes; PRD needs mobile-first SOS/tracking |
-| Web | Next.js (React) + same design system | Remix | Consistent core experience (§4.2–4.3), SSR for help/marketing |
-| API | Node + tRPC or REST (OpenAPI) + Postgres + PostGIS | NestJS | Location queries, audit history, strong typing end-to-end |
-| Auth | Password + TOTP/email code; optional device biometrics (fingerprint only, no face) | — | PRD §5.18 explicitly excludes facial recognition |
-| Push/SMS/Email | FCM/APNs + SMS provider + transactional email; in-app inbox as fallback | — | PRD §5.9: SMS+email required, in-app expected |
-| Maps | MapLibre / Google Maps SDK (abstracted) | — | Live vs. last-known rendering |
-| Vehicle layer | **Integration adapter interface** (see below) | — | Core risk: incompatibility (§13.1–13.2) |
-| Jobs/Events | Queue (BullMQ/SQS) + event log; idempotent alert pipeline with dedupe/grouping | — | §5.9 grouping/suppression, §5.14 flap control |
-| Infra | Docker + CI (GitHub Actions) + preview envs; IaC (Terraform) | — | Reproducible, auditable |
+See `docs/LOCAL_STACK.md` + `infra/` for the runnable setup.
+
+| Layer | Locked choice | Notes |
+|---|---|---|
+| Monorepo | Turborepo + pnpm + TypeScript | Shared types, tokens, API client |
+| Mobile | React Native (Expo) iOS/Android | Mobile-first SOS/tracking |
+| Web | Next.js (React) + same design system | Consistent core (§4.2–4.3) |
+| API | Node + tRPC or REST (OpenAPI) + **PostgreSQL 16 local in Docker** + PostGIS | No managed-DB subscription; `infra/docker-compose.yml`, `DATABASE_URL` only change to scale |
+| Auth | **Better Auth** — password + email/SMS code, optional fingerprint, no face | PRD §5.18 excludes facial recognition |
+| Files | **Cloudflare R2** (S3-compatible) | `R2_*` in `.env.example` |
+| Email | **Resend** | Verification codes, alerts, `RESEND_*` in `.env.example` |
+| Push/SMS | FCM/APNs + SMS provider; in-app inbox fallback | PRD §5.9: SMS+email required |
+| Maps | MapLibre / Google Maps SDK (abstracted) | Live vs. last-known rendering |
+| Vehicle layer | **Integration adapter interface** (see below) | Core risk: incompatibility (§13.1–13.2) |
+| Jobs/Events | Queue (BullMQ local) + event log; idempotent alert pipeline with dedupe/grouping | §5.9 grouping/suppression, §5.14 flap control |
+| Proxy/Hosting | **Caddy on local device** (`infra/Caddyfile`); `csap.localhost` → :3000, `api.csap.localhost` → :8000 | Copy file to VPS + enable auto_https to scale |
 
 ### 2.2 Key decisions to record as ADRs (`docs/adr/NNNN-*.md`)
 
@@ -112,16 +116,17 @@ This plan turns the PRD into buildable phases, from design system → architectu
 
 ## Phase 3 — Platform Foundation (Week 3–5)
 
-**Goal:** Ship-ready pipeline before features.
+**Goal:** Ship-ready pipeline before features. Local-first: everything runnable on this Mac.
 
 **Tasks:**
 1. Monorepo scaffold: `apps/mobile`, `apps/web`, `packages/ui`, `packages/api-client`, `packages/config`, `services/api`
-2. CI: lint, typecheck, unit test, Storybook build, API contract test; branch protection on `main`
-3. Envs: `dev / staging / prod` + preview deploys; secrets in manager (never `.env` in git)
-4. Observability: structured logs, error tracking, uptime + feature-availability metrics (§12.3)
-5. Feature flags + remote config (for market-specific availability §9)
+2. Local services (done, see `docs/LOCAL_STACK.md`): `infra/docker-compose.yml` (Postgres 16), `infra/Caddyfile` (local reverse proxy), `.env.example` (Better Auth + R2 + Resend)
+3. CI: lint, typecheck, unit test, Storybook build, API contract test; branch protection on `main`
+4. Envs: local (`csap.localhost`) → staging → prod; secrets in manager locally `.env` (never commit); scale later by changing `DATABASE_URL` + moving Caddy file to VPS
+5. Observability: structured logs, error tracking, uptime + feature-availability metrics (§12.3)
+6. Feature flags + remote config (for market-specific availability §9)
 
-**Exit criteria:** Empty mobile + web apps deploy to staging from `main`; CI green.
+**Exit criteria:** `docker compose -f infra/docker-compose.yml up -d` healthy + Caddy serves `csap.localhost`; empty mobile + web apps deploy from `main`; CI green.
 
 ---
 
