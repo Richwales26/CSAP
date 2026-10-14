@@ -31,3 +31,52 @@ export function riskWhy(input: { link: string; unacked: number; gaps: number; st
   if (input.gaps > 0) return { level: "Medium", why: ["some guard off"] };
   return { level: "Low", why: ["locks on", "link fresh"] };
 }
+
+// Demo owner + car so curl tests work without login (Phase 5-8).
+export async function getOrCreateDemo() {
+  let u = await pool.query("select id from users where email='demo@csap.local'");
+  let userId = u.rows[0]?.id as string | undefined;
+  if (!userId) {
+    const r = await pool.query(
+      "insert into users (email, name) values ('demo@csap.local','Demo') returning id"
+    );
+    userId = r.rows[0].id;
+  }
+  let v = await pool.query("select id, link_type from vehicles where owner_id=$1 limit 1", [userId]);
+  let vehicle = v.rows[0] as { id: string; link_type: string } | undefined;
+  if (!vehicle) {
+    const r = await pool.query(
+      "insert into vehicles (owner_id, vin, name, link_type) values ($1,'DEMO-VIN-001','Golf GTI','oem-cloud') returning id, link_type",
+      [userId]
+    );
+    vehicle = r.rows[0];
+    const caps = checkCompatibility("oem-cloud");
+    for (const [f, s] of Object.entries(caps))
+      await pool.query(
+        "insert into vehicle_capabilities (vehicle_id, feature, state) values ($1,$2,$3) on conflict do nothing",
+        [vehicle!.id, f, s]
+      );
+    await pool.query("insert into modes (vehicle_id, mode) values ($1,'everyday') on conflict do nothing", [
+      vehicle!.id,
+    ]);
+  }
+  return { userId: userId!, vehicleId: vehicle!.id as string };
+}
+
+export async function setMode(vehicleId: string, mode: string) {
+  const ok = ["everyday", "enhanced", "theft"].includes(mode);
+  if (!ok) throw new Error("bad mode");
+  await pool.query(
+    "insert into modes (vehicle_id, mode) values ($1,$2) on conflict (vehicle_id) do update set mode=$2",
+    [vehicleId, mode]
+  );
+  await pool.query("insert into events (vehicle_id, kind) values ($1,$2)", [vehicleId, `mode:${mode}`]);
+}
+
+export async function logEvent(vehicleId: string, kind: string, fog = "fact") {
+  await pool.query("insert into events (vehicle_id, kind, fact_or_guess) values ($1,$2,$3)", [
+    vehicleId,
+    kind,
+    fog,
+  ]);
+}
