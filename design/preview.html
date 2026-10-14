@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSAP — Visual Design Preview (Phase 1)</title>
+<style>
+  :root{
+    --bg:#0F1419; --card:#1A2230; --card2:#222D42; --text:#F2F5F9; --muted:#9AA7BC;
+    --green:#22C55E; --amber:#F59E0B; --red:#EF4444; --grey:#64748B; --blue:#3B82F6;
+    --radius:16px; --font:-apple-system,BlinkMacSystemFont,"SF Pro",Inter,Segoe UI,Roboto,sans-serif;
+  }
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);padding:32px}
+  h1{font-size:28px;margin:0 0 6px} p.sub{color:var(--muted);margin:0 0 24px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;max-width:1200px}
+  .phone{background:#0B0F16;border:1px solid #2A3650;border-radius:28px;padding:16px;max-width:380px}
+  .screen{background:var(--card);border-radius:20px;padding:16px;min-height:560px}
+  .status{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .risk{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-top:8px}
+  .card{background:var(--card2);border-radius:var(--radius);padding:12px;margin-top:12px}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #31405E;font-size:14px}
+  .row:first-child{border-top:0}
+  .pill{font-size:11px;padding:3px 8px;border-radius:999px;font-weight:700}
+  .btn{display:block;text-align:center;padding:12px;border-radius:12px;font-weight:700;margin-top:12px;text-decoration:none}
+  .btn-red{background:var(--red);color:#fff} .btn-blue{background:var(--blue);color:#fff} .btn-ghost{background:#2A3650;color:var(--text)}
+  .map{height:140px;border-radius:12px;background:linear-gradient(135deg,#1E3A5F,#0E2A1E);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;margin-top:8px;border:1px dashed #3B4D6E}
+  .tokens{max-width:1200px;margin-top:28px;background:#0B0F16;border:1px solid #2A3650;border-radius:16px;padding:16px}
+  code{background:#222D42;padding:2px 6px;border-radius:6px;font-size:12px}
+  .legend{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<h1>CSAP — Visual Design Preview</h1>
+<p class="sub">Phase 1 direction: dark security-first theme · honest status language · plain copy · <code>csap.localhost</code> local-first. Not final UI — reference for build.</p>
+
+<div class="grid">
+  <!-- Dashboard -->
+  <div class="phone"><div class="screen">
+    <div style="font-size:12px;color:var(--muted)">MY VEHICLE · Golf GTI</div>
+    <div class="status"><span class="dot" style="background:var(--green)"></span> Protected</div>
+    <span class="risk" style="background:#12351F;color:var(--green)">Risk: Low — why?</span>
+    <div class="card">
+      <div class="row"><span>🔒 Locks</span><span class="pill" style="background:#12351F;color:var(--green)">ACTIVE</span></div>
+      <div class="row"><span>📍 Live tracking</span><span class="pill" style="background:#12351F;color:var(--green)">LIVE</span></div>
+      <div class="row"><span>🚨 Theft monitoring</span><span class="pill" style="background:#3A2A0A;color:var(--amber)">ENHANCED</span></div>
+      <div class="row"><span>📡 Connection</span><span class="pill" style="background:#1E2A3A;color:var(--blue)">CONNECTED</span></div>
+    </div>
+    <div class="card"><b>Recent</b>
+      <div class="row"><span>Locked · 2m ago</span><span>✓</span></div>
+      <div class="row"><span>Mode → Enhanced</span><span>✓</span></div>
+    </div>
+    <a class="btn btn-red" href="#">SOS</a>
+    <a class="btn btn-ghost" href="#">View map</a>
+  </div></div>
+
+  <!-- Tracking / stale -->
+  <div class="phone"><div class="screen">
+    <div style="font-size:12px;color:var(--muted)">TRACKING</div>
+    <div class="status"><span class="dot" style="background:var(--amber)"></span> Last-known</div>
+    <div class="legend">12 min ago — not live. Do not present as current.</div>
+    <div class="map">Map · last-known pin + timestamp</div>
+    <div class="card">
+      <div class="row"><span>Permission</span><span class="pill" style="background:#1E2A3A;color:var(--blue)">OWNER ONLY</span></div>
+      <div class="row"><span>History (Premium)</span><span>30 days</span></div>
+      <div class="row"><span>Temp share</span><span>Off → expires auto</span></div>
+    </div>
+    <a class="btn btn-blue" href="#">Share for incident (15 min)</a>
+  </div></div>
+
+  <!-- SOS -->
+  <div class="phone"><div class="screen">
+    <div style="font-size:12px;color:var(--muted)">SOS</div>
+    <div class="status"><span class="dot" style="background:var(--red)"></span> Get help</div>
+    <div class="legend">CSAP is not an emergency service. We notify contacts + help you call local services.</div>
+    <div class="card">
+      <div class="row"><span>Location share</span><span>With contacts ✓</span></div>
+      <div class="row"><span>Contact: Ama</span><span class="pill" style="background:#12351F;color:var(--green)">SENT</span></div>
+      <div class="row"><span>Emergency services</span><span class="pill" style="background:#3A2A0A;color:var(--amber)">CALL YOURSELF</span></div>
+    </div>
+    <a class="btn btn-red" href="#">Hold to send SOS</a>
+    <a class="btn btn-ghost" href="#">Call emergency directly</a>
+  </div></div>
+</div>
+
+<div class="tokens">
+  <b>Design tokens (v1)</b>
+  <p class="legend">Status: <span class="pill" style="background:#12351F;color:var(--green)">ACTIVE</span> <span class="pill" style="background:#2A2F3A;color:var(--grey)">UNAVAILABLE</span> <span class="pill" style="background:#3A2A0A;color:var(--amber)">DISCONNECTED / STALE</span> <span class="pill" style="background:#3A1A1A;color:var(--red)">UNKNOWN / FAILED</span> — never show last-known as live, never claim success when unconfirmed. Type 16/14/12, radius 16/12, touch ≥44pt, WCAG AA.</p>
+  <p class="legend">Stack locked: Postgres 16 local · Caddy <code>csap.localhost</code> · Better Auth · R2 · Resend. Full plan: <code>docs/IMPLEMENTATION_PLAN.md</code></p>
+</div>
+</body>
+</html>
