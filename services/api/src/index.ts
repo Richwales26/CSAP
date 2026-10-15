@@ -1,6 +1,7 @@
 // CSAP API (Phases 5-8). Honest states only. Run: pnpm --filter @csap/api dev
 import http from "node:http";
 import { pool, health, checkCompatibility, riskWhy, getOrCreateDemo, setMode, logEvent } from "./db.js";
+import { sendSms } from "./sms.js";
 
 const port = Number(process.env.API_PORT || 8000);
 const send = (res: http.ServerResponse, code: number, obj: unknown) => {
@@ -162,18 +163,25 @@ const server = http.createServer(async (req, res) => {
       rank,
       emailState,
     ]);
-    return send(res, 200, { ...r.rows[0], delivery: emailState });
+    let sms: unknown = rank === "critical" ? { state: "skipped-no-number" } : { state: "skipped-routine" };
+    if (rank === "critical" && process.env.SMS_TEST_TO)
+      sms = await sendSms(process.env.SMS_TEST_TO, `CSAP ${b.kind || "alert"} — check your car.`);
+    return send(res, 200, { ...r.rows[0], delivery: emailState, sms });
   }
   if (p === "/sos" && req.method === "POST") {
     const b = await body(req);
     const d = await getOrCreateDemo();
     await pool.query("insert into alerts (vehicle_id, kind, rank, state) values ($1,'sos', 'critical','sent')", [d.vehicleId]);
     await logEvent(d.vehicleId, `sos:${b.kind || "help"}`, "fact");
+    let sms: unknown = { state: "skipped-no-number" };
+    if (process.env.SMS_TEST_TO)
+      sms = await sendSms(process.env.SMS_TEST_TO, `CSAP SOS — owner needs help. Check app.`);
     return send(res, 200, {
       ok: true,
       contacts: "notified",
       emergency: "call-yourself",
       state: process.env.RESEND_API_KEY ? "sent" : "stored-unsure-email",
+      sms,
       note: "CSAP is not an emergency service.",
     });
   }
@@ -266,6 +274,15 @@ const server = http.createServer(async (req, res) => {
     const d = await getOrCreateDemo();
     const ev = await pool.query("select count(*)::int c from events where vehicle_id=$1", [d.vehicleId]);
     return send(res, 200, { what: "spots, alerts, events", events: ev.rows[0].c, how: "ask support, 30 days" });
+  }
+
+  // SMS trial test (safe: keys from local .env only)
+  if (p === "/sms/test" && req.method === "POST") {
+    const b = await body(req);
+    const to = b.to || process.env.SMS_TEST_TO || "";
+    if (!to) return send(res, 400, { ok: false, error: "add SMS_TEST_TO in .env or send {to}" });
+    const out = await sendSms(to, b.message || "CSAP test — your SMS works.");
+    return send(res, out.ok ? 200 : 502, out);
   }
 
   // Phase 12: stats (no names, no exact spots)
